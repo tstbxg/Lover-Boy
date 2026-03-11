@@ -303,8 +303,11 @@ def setup_scheduler():
 if __name__ == "__main__":
     print("🎊 超甜情侣每日消息推送程序 🎊")
     print("=" * 40)
-    
-    # 启动定时任务
+
+    # 直接跳过测试输入，不发送测试消息
+    send_test = "n"
+
+    if send_test == "y":
+        send_daily_message()
 
     setup_scheduler()
-
