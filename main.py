@@ -263,19 +263,8 @@ def send_daily_message():
 
 def setup_scheduler():
     """设置定时任务"""
-    # 手动输入发送时间
-    print("\n===== 设置每日发送时间 =====")
-    try:
-        hour = int(input(f"请输入发送小时（默认{CONFIG['DEFAULT_HOUR']}）：") or CONFIG['DEFAULT_HOUR'])
-        minute = int(input(f"请输入发送分钟（默认{CONFIG['DEFAULT_MINUTE']}）：") or CONFIG['DEFAULT_MINUTE'])
-        
-        # 验证时间合法性
-        if not (0 <= hour < 24 and 0 <= minute < 60):
-            print("⚠️ 输入时间不合法，使用默认时间：{}:{}".format(CONFIG['DEFAULT_HOUR'], CONFIG['DEFAULT_MINUTE']))
-            hour, minute = CONFIG['DEFAULT_HOUR'], CONFIG['DEFAULT_MINUTE']
-    except ValueError:
-        print("⚠️ 输入格式错误，使用默认时间：{}:{}".format(CONFIG['DEFAULT_HOUR'], CONFIG['DEFAULT_MINUTE']))
-        hour, minute = CONFIG['DEFAULT_HOUR'], CONFIG['DEFAULT_MINUTE']
+    # 使用配置默认时间（适配自动化环境）
+hour, minute = CONFIG['DEFAULT_HOUR'], CONFIG['DEFAULT_MINUTE']
     
     # 初始化调度器
     scheduler = BlockingScheduler(timezone="Asia/Shanghai")
@@ -313,3 +302,4 @@ if __name__ == "__main__":
     # 启动定时任务
 
     setup_scheduler()
+
