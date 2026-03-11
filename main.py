@@ -310,10 +310,6 @@ if __name__ == "__main__":
     print("🎊 超甜情侣每日消息推送程序 🎊")
     print("=" * 40)
     
-    # 先发送一次测试消息（可选）
-    send_test = input("是否立即发送测试消息？(y/n，默认n)：").strip().lower()
-    if send_test == "y":
-        send_daily_message()
-    
     # 启动定时任务
+
     setup_scheduler()
