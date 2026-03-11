@@ -264,8 +264,13 @@ def send_daily_message():
 def setup_scheduler():
     """设置定时任务"""
     # 使用配置默认时间（适配自动化环境）
-hour, minute = CONFIG['DEFAULT_HOUR'], CONFIG['DEFAULT_MINUTE']
-    
+    hour, minute = CONFIG['DEFAULT_HOUR'], CONFIG['DEFAULT_MINUTE']
+
+    # 验证时间合法性
+    if not (0 <= hour < 24 and 0 <= minute < 60):
+        print("⚠️ 配置时间不合法，使用默认时间：9:00")
+        hour, minute = 9, 0
+
     # 初始化调度器
     scheduler = BlockingScheduler(timezone="Asia/Shanghai")
     
