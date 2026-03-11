@@ -9,7 +9,6 @@ import datetime
 import random
 import json
 import time
-from apscheduler.schedulers.blocking import BlockingScheduler
 import lunardate
 
 # ====================== 【核心配置区】请修改为自己的信息 ======================
