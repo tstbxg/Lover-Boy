@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-超甜情侣每日早安/晚安消息推送【优化版】
+超甜情侣每日早安/晚安消息推送【无交互版】
 修复：无成功/失败反馈、异常捕获笼统、逻辑隐性问题
 新增：精准日志、关键校验、心跳提示、错误强反馈
 功能：天气+恋爱天数+农历生日倒计时+星座运势+暖心文案+定时发送
@@ -10,6 +10,7 @@ import datetime
 import random
 import json
 import time
+import os
 from apscheduler.schedulers.blocking import BlockingScheduler
 import lunardate
 
@@ -393,9 +394,9 @@ def setup_scheduler():
         scheduler.shutdown()
         print_log("ERROR", "调度器已强制关闭，程序退出 ❌")
 
-# ====================== 【程序入口】优化：新增测试开关、配置校验 ======================
+# ====================== 【程序入口】无交互版：直接启动定时 ======================
 if __name__ == "__main__":
-    print("🎊 超甜情侣每日消息推送【优化版】🎊\n")
+    print("🎊 超甜情侣每日消息推送【无交互版】🎊\n")
     # 启动前全局配置校验
     print_log("INFO", "开始启动前全局配置校验")
     must_config = ["WECHAT_APPID", "WECHAT_APPSECRET", "GIRL_OPENID", "MY_OPENID", "AMAP_KEY", "CITY_ADCODE"]
@@ -405,13 +406,5 @@ if __name__ == "__main__":
         exit(1)
     print_log("SUCCESS", "全局配置校验通过，无缺失项")
     
-    # 测试开关：y=启动后立即发送一次（测试用），n=仅启动定时任务
-    send_test = input("\n是否启动后立即发送测试消息？(y/n，默认n)：").strip().lower() or "n"
-    if send_test == "y":
-        print_log("INFO", "用户选择启动测试，立即执行一次消息发送任务")
-        send_daily_message()
-        print_log("INFO", "测试任务执行完毕，即将启动定时调度器...\n")
-        time.sleep(3)
-    
-    # 启动定时调度器
+    # 直接启动定时调度器，无任何交互
     setup_scheduler()
