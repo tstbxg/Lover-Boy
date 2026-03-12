@@ -1,7 +1,7 @@
 name: 情侣每日消息推送
 on:
   schedule:
-    - cron: '0 1 * * *'  # 北京时间 09:00 推送
+   - cron: '*/3 * * * *'  # 每3分钟触发一次（测试用）
   workflow_dispatch:
 
 jobs:
