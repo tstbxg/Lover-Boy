@@ -1,8 +1,8 @@
 name: 情侣每日消息推送
 on:
   schedule:
-    - cron: '*/5 * * * *'  # 每5分钟触发一次（测试专用）
-  workflow_dispatch:      # 保留手动触发开关
+    - cron: '0 1 * * *'  # 北京时间9点（UTC 1点）
+  workflow_dispatch:    # 保留手动触发开关
 
 jobs:
   send-message:
