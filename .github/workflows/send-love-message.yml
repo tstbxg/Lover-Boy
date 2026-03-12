@@ -1,8 +1,8 @@
 name: 情侣每日消息推送
 on:
   schedule:
-    - cron: '*/1 * * * *'  # 每1分钟触发（测试用，验证后改回 0 1 * * *）
-  workflow_dispatch:      # 手动触发开关
+    - cron: '*/5 * * * *'  # 每5分钟触发一次（测试专用）
+  workflow_dispatch:      # 保留手动触发开关
 
 jobs:
   send-message:
@@ -12,7 +12,7 @@ jobs:
       - name: 拉取代码
         uses: actions/checkout@v4
         with:
-          persist-credentials: false  # 修复Git认证问题
+          persist-credentials: false  # 解决Git认证问题
 
       - name: 配置Python
         uses: actions/setup-python@v5
