@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 超甜情侣每日早安/晚安消息推送【GitHub Actions 单次执行版】
-修复：无成功/失败反馈、阻塞运行导致 Actions 卡死、时区问题、环境变量读取、接口重试
-功能：天气+恋爱天数+农历生日倒计时+星座运势+暖心文案+单次推送
+修复：字符串未闭合、乱码、时区问题、环境变量读取、接口重试
 """
 import requests
 import datetime
@@ -311,4 +310,4 @@ if __name__ == "__main__":
     
     print_log("SUCCESS", "全局配置校验通过")
     send_daily_message()
-    print_log("INFO", "{insert\_element\_1\_4pyFIOWNleasoea2iOaBr+aOqOmAgeS7u+WKoeaJp+ihjOWujOavle+8jOeoi+W6j+ato+W4uOmAgOWHuiIp}
+    print_log("INFO", "✅ 单次消息推送任务执行完毕，程序正常退出")
