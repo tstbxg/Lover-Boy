@@ -8,19 +8,21 @@ jobs:
   send-message:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    steps:
-      - name: 拉取代码
-        uses: actions/checkout@v4
+   steps:
+  - name: 拉取代码
+    uses: actions/checkout@v4
+    with:
+      persist-credentials: false
 
-      - name: 配置Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
+  - name: 配置Python
+    uses: actions/setup-python@v5
+    with:
+      python-version: '3.10'
 
-      - name: 安装依赖
-        run: |
-          python -m pip install --upgrade pip
-          pip install requests lunardate pytz  # 新增pytz依赖（时区处理）
+  - name: 安装依赖
+    run: |
+      python -m pip install --upgrade pip
+      pip install requests lunardate pytz
 
       - name: 执行消息推送
         env:
