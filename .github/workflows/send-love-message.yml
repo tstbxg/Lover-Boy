@@ -1,8 +1,8 @@
 name: 情侣每日消息推送
 on:
   schedule:
-    - cron: '0 22 * * *'  # 北京时间6点 = UTC时间前一天22点
-  workflow_dispatch:    # 保留手动触发开关
+    - cron: '0 1 * * *'  # 北京时间9点 = UTC时间1点
+  workflow_dispatch:      # 保留手动触发开关
 
 jobs:
   send-message:
