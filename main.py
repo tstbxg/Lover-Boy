@@ -210,9 +210,9 @@ def generate_love_message():
         
         girl_birth_tip = get_birth_tip("宝贝", girl_birth_left)
         my_birth_tip = get_birth_tip("我的", my_birth_left)
-        
+               
         # 拼接消息
-      message = "测试123"
+        message = "测试123"  # 这行的缩进要和上面的代码（比如girl_birth_tip那行）完全一致（通常是4/8个空格）
         print_log("SUCCESS", "每日恋爱消息生成成功")
         return message
     except Exception as e:
