@@ -212,18 +212,7 @@ def generate_love_message():
         my_birth_tip = get_birth_tip("我的", my_birth_left)
         
         # 拼接消息
-        message = f"""
-🏙️ 城市：{CONFIG['CITY_NAME']}
-🌤️ 天气：{weather}
-💌 今日叮嘱：{advice}
-💑 我们相恋的第 {love_days} 天
-{girl_birth_tip}
-{my_birth_tip}
-😂 专属小情话：{joke}
-✨ {CONFIG['GIRL_CONSTELLATION']}：{girl_const_tip}
-✨ {CONFIG['MY_CONSTELLATION']}：{my_const_tip}
-{ending}
-""".strip()
+      message = "测试123"
         print_log("SUCCESS", "每日恋爱消息生成成功")
         return message
     except Exception as e:
