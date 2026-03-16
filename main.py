@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-情侣每日消息推送【优化版】
-解决：微信消息拦截、缩进错误、格式异常、风控检测问题
-适配GitHub Actions定时执行，支持北京时间、农历生日、高德天气
+情侣每日消息推送【Emoji优化版】
+解决：微信消息拦截、缩进错误、格式异常问题
+新增：适配风控的精美Emoji表情，视觉更温馨
 """
 import requests
 import datetime
@@ -40,55 +40,55 @@ CONFIG = {
     "MY_CONSTELLATION": "白羊座",    # 自己星座
 }
 
-# ====================== 【自定义文案库】可自行修改 ======================
+# ====================== 【自定义文案库】带Emoji ======================
 DAILY_ADVICE = [
-    "宝贝，记得按时吃饭，不许挑食哦",
-    "乖乖，今天也要多喝水，照顾好自己",
-    "亲爱的，工作再忙也要歇一歇，别太累",
-    "我的小宝，晚上早点睡，不许熬夜啦",
-    "宝贝，不管多忙，都要记得我在想你",
-    "乖乖，天气变化记得添减衣服",
-    "亲爱的，今天也要开开心心的，不许不开心"
+    "🥢 宝贝，记得按时吃饭，不许挑食哦",
+    "💧 乖乖，今天也要多喝水，照顾好自己",
+    "🫂 亲爱的，工作再忙也要歇一歇，别太累",
+    "😴 我的小宝，晚上早点睡，不许熬夜啦",
+    "💓 宝贝，不管多忙，都要记得我在想你",
+    "🧥 乖乖，天气变化记得添减衣服",
+    "🥳 亲爱的，今天也要开开心心的，不许不开心"
 ]
 
 LOVE_JOKES = [
-    "什么门永远关不上？是我想你的心门呀",
-    "什么瓜最甜？你这个小傻瓜最甜啦",
-    "什么星星最亮？你眼睛里的光最亮",
-    "什么海最深？对你的喜欢最深不见底",
-    "什么糖最甜？你甜甜的笑最甜",
-    "什么路最长？想陪你走的余生最长"
+    "💘 什么门永远关不上？是我想你的心门呀",
+    "🥰 什么瓜最甜？你这个小傻瓜最甜啦",
+    "✨ 什么星星最亮？你眼睛里的光最亮",
+    "🌊 什么海最深？对你的喜欢最深不见底",
+    "🍬 什么糖最甜？你甜甜的笑最甜",
+    "🛤️ 什么路最长？想陪你走的余生最长"
 ]
 
 CONSTELLATION_TIPS = {
     "金牛座": [
-        "今天适合吃点好吃的，好好犒劳自己",
-        "别太纠结小事，开心最重要啦",
-        "慢一点也没关系，我会一直陪着你",
-        "买个小礼物取悦自己，幸福感满满",
-        "今天的你温柔又迷人，超有魅力"
+        "🍰 今天适合吃点好吃的，好好犒劳自己",
+        "🥳 别太纠结小事，开心最重要啦",
+        "🌿 慢一点也没关系，我会一直陪着你",
+        "🎁 买个小礼物取悦自己，幸福感满满",
+        "💖 今天的你温柔又迷人，超有魅力"
     ],
     "白羊座": [
-        "保持元气满满，好运都会奔向你",
-        "勇敢一点，我永远是你的后盾",
-        "别太急躁，慢慢来会更顺利",
-        "今天会有小惊喜在等你哦",
-        "你的热情和活力超有感染力"
+        "🍀 保持元气满满，好运都会奔向你",
+        "🫂 勇敢一点，我永远是你的后盾",
+        "✨ 别太急躁，慢慢来会更顺利",
+        "🎊 今天会有小惊喜在等你哦",
+        "💪 你的热情和活力超有感染力"
     ],
     "其他星座": [
-        "今天的你超棒的，继续闪闪发光",
-        "保持好心情，万事都会顺顺利利",
-        "爱自己是终身浪漫的开始"
+        "✨ 今天的你超棒的，继续闪闪发光",
+        "🍀 保持好心情，万事都会顺顺利利",
+        "💖 爱自己是终身浪漫的开始"
     ]
 }
 
 ENDING_WORDS = [
-    "我爱你，今天也超爱你",
-    "想你，时时刻刻都在想你",
-    "有你在，每一天都很甜",
-    "我的温柔与偏爱，全都给你",
-    "余生漫漫，我只喜欢你",
-    "你是我的满心欢喜与唯一"
+    "💓 我爱你，今天也超爱你",
+    "💭 想你，时时刻刻都在想你",
+    "🍬 有你在，每一天都很甜",
+    "💞 我的温柔与偏爱，全都给你",
+    "💌 余生漫漫，我只喜欢你",
+    "❤️ 你是我的满心欢喜与唯一"
 ]
 
 # ====================== 【工具函数】======================
@@ -136,13 +136,13 @@ def get_weather():
         result = resp.json()
         
         if result.get("status") != "1":
-            return "天气获取失败"
+            return "🌤️ 天气获取失败"
         
         forecast = result["forecasts"][0]["casts"][0]
-        return f"{forecast['dayweather']} 最低{forecast['nighttemp']}℃ | 最高{forecast['daytemp']}℃"
+        return f"🌤️ {forecast['dayweather']} 最低{forecast['nighttemp']}℃ | 最高{forecast['daytemp']}℃"
     except Exception as e:
         print_log("ERROR", f"获取天气失败：{str(e)}")
-        return "天气获取失败"
+        return "🌤️ 天气获取失败"
 
 def get_birthday_left_days(lunar_birth):
     """计算生日倒计时（农历转公历）"""
@@ -161,7 +161,7 @@ def get_birthday_left_days(lunar_birth):
         return 0
 
 def generate_love_message():
-    """生成消息（优化格式，避免微信拦截）"""
+    """生成消息（带Emoji，规避风控）"""
     try:
         # 基础数据计算
         love_days = (datetime.datetime.now(TZ).date() - CONFIG["LOVE_START_DATE"]).days
@@ -176,36 +176,36 @@ def generate_love_message():
         my_const_tip = random.choice(CONSTELLATION_TIPS.get(CONFIG["MY_CONSTELLATION"], CONSTELLATION_TIPS["其他星座"]))
         ending = random.choice(ENDING_WORDS)
         
-        # 生日提示
+        # 生日提示（带Emoji）
         def birth_tip(name, days):
             if days == 0:
-                return f"{name}今天生日啦！生日快乐"
+                return f"🎂 {name}今天生日啦！生日快乐🥳"
             elif 1 <= days <= 7:
-                return f"距离{name}生日还有 {days} 天，快要过生日啦！"
+                return f"🎂 距离{name}生日还有 {days} 天 🎉 快要过生日啦！"
             else:
-                return f"距离{name}生日还有 {days} 天"
+                return f"🎂 距离{name}生日还有 {days} 天"
         
-        # 核心：优化消息格式（单行拼接，减少特殊符号）
+        # 核心：带Emoji的消息格式（数量适中，避免风控）
         message = (
-            f"城市：{CONFIG['CITY_NAME']}\n"
-            f"天气：{weather}\n"
-            f"今日叮嘱：{advice}\n"
-            f"我们相恋的第 {love_days} 天\n"
+            f"🏙️ 城市：{CONFIG['CITY_NAME']}\n"
+            f"{weather}\n"
+            f"{advice}\n"
+            f"💑 我们相恋的第 {love_days} 天\n"
             f"{birth_tip('宝贝', girl_birth_left)}\n"
             f"{birth_tip('我的', my_birth_left)}\n"
-            f"专属小情话：{joke}\n"
-            f"{CONFIG['GIRL_CONSTELLATION']}：{girl_const_tip}\n"
-            f"{CONFIG['MY_CONSTELLATION']}：{my_const_tip}\n"
+            f"{joke}\n"
+            f"✨ {CONFIG['GIRL_CONSTELLATION']}：{girl_const_tip}\n"
+            f"✨ {CONFIG['MY_CONSTELLATION']}：{my_const_tip}\n"
             f"{ending}"
         )
         print_log("SUCCESS", "消息生成成功")
         return message
     except Exception as e:
         print_log("ERROR", f"生成消息失败：{str(e)}")
-        return "今日甜蜜消息生成失败，宝贝我超想你"
+        return "❤️ 今日甜蜜消息生成失败，宝贝我超想你 ❤️"
 
 def send_wechat_msg(openid, token, message):
-    """发送微信消息（简化版，适配风控）"""
+    """发送微信消息（适配Emoji+风控）"""
     if not token or not openid:
         return False
     
