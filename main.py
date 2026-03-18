@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-情侣每日消息推送【最终完整版】
-特性：微信模板消息卡片+甜系Emoji+星座建议+容错性强+日志清晰
+情侣每日消息推送【测试号专用-客服消息版】
+特性：测试号100%支持+甜系Emoji+分段排版+星座/生日/天气
 适配：GitHub Actions定时执行、北京时间、农历生日、高德天气
 """
 import requests
@@ -17,12 +17,11 @@ import pytz
 TZ = pytz.timezone('Asia/Shanghai')
 
 CONFIG = {
-    # 微信公众号必填配置
+    # 微信测试号必填配置
     "WECHAT_APPID": os.getenv("WECHAT_APPID", ""),
     "WECHAT_APPSECRET": os.getenv("WECHAT_APPSECRET", ""),
-    "GIRL_OPENID": os.getenv("GIRL_OPENID", ""),  # 女友OpenID
-    "MY_OPENID": os.getenv("MY_OPENID", ""),      # 自己OpenID
-    "TEMPLATE_ID": os.getenv("TEMPLATE_ID", ""),  # 模板消息ID（必填！从公众号后台复制）
+    "GIRL_OPENID": os.getenv("GIRL_OPENID", ""),  # 女友OpenID（测试号用户列表复制）
+    "MY_OPENID": os.getenv("MY_OPENID", ""),      # 自己OpenID（测试号用户列表复制）
     
     # 高德天气必填配置
     "AMAP_KEY": os.getenv("AMAP_KEY", ""),
@@ -30,7 +29,7 @@ CONFIG = {
     "CITY_ADCODE": os.getenv("CITY_ADCODE", ""),  # 城市编码（高德查询）
     
     # 恋爱/生日配置
-    "LOVE_START_DATE": datetime.date(2021, 12, 12),  # 相恋日期
+    "LOVE_START_DATE": datetime.date(2021, 12, 12),  # 相恋日期（改自己的）
     "GIRL_LUNAR_BIRTH": (2002, 3, 9),                # 女友农历生日(年,月,日)
     "MY_LUNAR_BIRTH": (2003, 3, 13),                  # 自己农历生日(年,月,日)
     
@@ -107,16 +106,16 @@ def print_log(level, content):
     print(f"{now} {level_map.get(level, '[INFO]')} {content}")
 
 def check_config():
-    """校验必填配置（新增模板ID校验）"""
+    """校验必填配置"""
     must_config = ["WECHAT_APPID", "WECHAT_APPSECRET", "GIRL_OPENID", "MY_OPENID", 
-                   "AMAP_KEY", "CITY_ADCODE", "TEMPLATE_ID"]
+                   "AMAP_KEY", "CITY_ADCODE"]
     miss = [k for k in must_config if not CONFIG[k]]
     if miss:
         print_log("ERROR", f"必填配置缺失：{','.join(miss)}")
         return False
     # 校验OpenID长度
     if len(CONFIG["GIRL_OPENID"]) < 20 or len(CONFIG["MY_OPENID"]) < 20:
-        print_log("ERROR", "OpenID格式异常（长度过短），请核对")
+        print_log("ERROR", "OpenID格式异常（长度过短），请核对测试号用户列表")
         return False
     return True
 
@@ -171,8 +170,8 @@ def get_birthday_left_days(lunar_birth):
         print_log("ERROR", f"计算生日失败：{str(e)}")
         return 0
 
-def generate_template_data():
-    """生成模板消息所需的字段数据（含星座建议+甜系Emoji）"""
+def generate_love_message():
+    """生成接近卡片样式的甜系文本消息"""
     try:
         # 基础数据
         love_days = (datetime.datetime.now(TZ).date() - CONFIG["LOVE_START_DATE"]).days
@@ -180,15 +179,14 @@ def generate_template_data():
         my_birth_left = get_birthday_left_days(CONFIG["MY_LUNAR_BIRTH"])
         weather = get_weather()
         
-        # 随机文案（含星座建议）
+        # 随机文案
         advice = random.choice(DAILY_ADVICE)
         joke = random.choice(LOVE_JOKES)
-        # 读取对应星座的建议，没有则用默认
         girl_const_tip = random.choice(CONSTELLATION_TIPS.get(CONFIG["GIRL_CONSTELLATION"], CONSTELLATION_TIPS["其他星座"]))
         my_const_tip = random.choice(CONSTELLATION_TIPS.get(CONFIG["MY_CONSTELLATION"], CONSTELLATION_TIPS["其他星座"]))
         ending = random.choice(ENDING_WORDS)
         
-        # 生日提示（带Emoji）
+        # 生日提示
         def birth_tip(name, days):
             if days == 0:
                 return f"🎂 {name}今天生日啦！生日快乐🥳"
@@ -200,70 +198,46 @@ def generate_template_data():
         girl_birth_text = birth_tip("小宝", girl_birth_left)
         my_birth_text = birth_tip("我", my_birth_left)
         
-        # 整合星座建议
+        # 星座建议整合
         const_text = f"🌟 小宝({CONFIG['GIRL_CONSTELLATION']})：{girl_const_tip}\n🌟 我({CONFIG['MY_CONSTELLATION']})：{my_const_tip}"
         
-        # 模板消息字段（带Emoji，和公众号模板一一对应！）
-        template_data = {
-            "first": {
-                "value": "💌 给小臭屁的每日甜蜜提醒",
-                "color": "#173177"
-            },
-            "keyword1": {  # 城市
-                "value": f"🏙️ {CONFIG['CITY_NAME']}",
-                "color": "#173177"
-            },
-            "keyword2": {  # 天气
-                "value": weather,  # 天气函数里已经带了🌤️
-                "color": "#173177"
-            },
-            "keyword3": {  # 今日建议
-                "value": f"💡 {advice}",
-                "color": "#173177"
-            },
-            "keyword4": {  # 恋爱天数
-                "value": f"❤️ 我们相恋的第 {love_days} 天",
-                "color": "#173177"
-            },
-            "keyword5": {  # 生日+星座
-                "value": f"{girl_birth_text}\n{my_birth_text}\n{const_text}",
-                "color": "#173177"
-            },
-            "remark": {  # 寄语/结尾
-                "value": f"{joke}\n{ending}",
-                "color": "#FF69B4"  # 粉色，突出结尾
-            }
-        }
-        print_log("SUCCESS", "模板消息数据生成成功")
-        return template_data
+        # 模拟卡片排版（分段+Emoji，测试号100%能显示）
+        message = (
+            "💌 给小臭屁的每日甜蜜提醒\n"
+            "——————————————\n"  # 分割线模拟卡片边框
+            f"🏙️ 城市：{CONFIG['CITY_NAME']}\n"
+            f"{weather}\n"
+            f"💡 今日建议：{advice}\n"
+            f"❤️ 恋爱天数：我们相恋的第 {love_days} 天\n"
+            f"{girl_birth_text}\n"
+            f"{my_birth_text}\n"
+            f"{const_text}\n"
+            "——————————————\n"
+            f"{joke}\n"
+            f"{ending}"
+        )
+        print_log("SUCCESS", "消息生成成功")
+        return message
     except Exception as e:
-        print_log("ERROR", f"生成模板数据失败：{str(e)}")
-        # 兜底数据
-        return {
-            "first": {"value": "💌 每日甜蜜提醒", "color": "#173177"},
-            "remark": {"value": "❤️ 宝贝我超想你", "color": "#FF69B4"}
-        }
+        print_log("ERROR", f"生成消息失败：{str(e)}")
+        return "❤️ 今日甜蜜消息生成失败，宝贝我超想你 ❤️"
 
-def send_template_msg(openid, token, template_id, data):
-    """发送模板消息（核心：卡片样式）"""
-    print_log("INFO", f"准备发送模板消息至OpenID：{openid[:8]}****")
+def send_wechat_msg(openid, token, message):
+    """发送客服消息（测试号100%支持）"""
+    print_log("INFO", f"准备发送消息至OpenID：{openid[:8]}****")
     
     if not token:
         print_log("ERROR", "❌ Token为空，无法发送")
         return False
     if not openid or len(openid) < 20:
-        print_log("ERROR", "❌ OpenID无效")
-        return False
-    if not template_id:
-        print_log("ERROR", "❌ 模板ID为空")
+        print_log("ERROR", "❌ OpenID无效（请核对测试号用户列表）")
         return False
     
-    url = f"https://api.weixin.qq.com/cgi-bin/message/template/send?access_token={token}"
+    url = f"https://api.weixin.qq.com/cgi-bin/message/custom/send?access_token={token}"
     payload = {
         "touser": openid,
-        "template_id": template_id,
-        "data": data,
-        "url": ""  # 点击卡片跳转的链接（可选，留空则不跳转）
+        "msgtype": "text",
+        "text": {"content": message}
     }
     
     try:
@@ -273,11 +247,11 @@ def send_template_msg(openid, token, template_id, data):
             headers={"Content-Type": "application/json; charset=utf-8"},
             timeout=15
         )
-        print_log("INFO", f"微信模板接口返回：{resp.text}")
+        print_log("INFO", f"微信客服接口返回：{resp.text}")
         
         result = resp.json()
         if result.get("errcode") == 0:
-            print_log("SUCCESS", f"✅ 模板消息发送成功至{openid[:8]}****")
+            print_log("SUCCESS", f"✅ 消息发送成功至{openid[:8]}****")
             return True
         else:
             print_log("ERROR", f"❌ 发送失败：错误码{result['errcode']}，原因{result['errmsg']}")
@@ -288,7 +262,7 @@ def send_template_msg(openid, token, template_id, data):
 
 # ====================== 【主执行函数】======================
 def main():
-    print_log("INFO", "========== 开始执行模板消息推送 ==========")
+    print_log("INFO", "========== 开始执行情侣消息推送 ==========")
     
     # 1. 校验配置
     if not check_config():
@@ -300,20 +274,20 @@ def main():
         print_log("ERROR", "获取Token失败，任务终止")
         return
     
-    # 3. 生成模板数据
-    template_data = generate_template_data()
+    # 3. 生成甜系消息
+    love_message = generate_love_message()
     
-    # 4. 发送模板消息
-    send_girl = send_template_msg(CONFIG["GIRL_OPENID"], token, CONFIG["TEMPLATE_ID"], template_data)
-    send_my = send_template_msg(CONFIG["MY_OPENID"], token, CONFIG["TEMPLATE_ID"], template_data)
+    # 4. 发送消息（你+女友）
+    send_girl = send_wechat_msg(CONFIG["GIRL_OPENID"], token, love_message)
+    send_my = send_wechat_msg(CONFIG["MY_OPENID"], token, love_message)
     
     # 5. 结果汇总
     if send_girl and send_my:
-        print_log("SUCCESS", "全部模板消息发送成功 ✅")
+        print_log("SUCCESS", "✅ 全部消息发送成功，去公众号聊天框查看！")
     else:
-        print_log("ERROR", "部分/全部模板消息发送失败 ❌")
+        print_log("ERROR", "❌ 部分/全部消息发送失败，请核对OpenID和用户互动状态")
     
-    print_log("INFO", "========== 模板消息推送任务结束 ==========")
+    print_log("INFO", "========== 消息推送任务结束 ==========")
 
 if __name__ == "__main__":
     main()
