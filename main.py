@@ -187,7 +187,7 @@ def generate_love_message():
         
         # 核心：带Emoji的消息格式（数量适中，避免风控）
         message = (
-            💌 给小宝贝的每日甜蜜提醒
+            "💌 给小臭屁的每日甜蜜提醒\n"  
             f"🏙️ 城市：{CONFIG['CITY_NAME']}\n"
             f"{weather}\n"
             f"{advice}\n"
