@@ -3,7 +3,7 @@
 情侣每日消息推送【Emoji优化版】
 解决：微信消息拦截、缩进错误、格式异常问题
 新增：适配风控的精美Emoji表情，视觉更温馨
-新增：周年纪念日倒计时功能
+新增：周年纪念日倒计时、自动计算当前第几周年
 """
 import requests
 import datetime
@@ -29,10 +29,9 @@ CONFIG = {
     "CITY_NAME": "广州",          # 城市名称（可修改）
     "CITY_ADCODE": os.getenv("CITY_ADCODE", ""),  # 城市编码（高德查询）
     
-    # 恋爱/生日配置（直接修改为自己的信息）
-    "LOVE_START_DATE": datetime.date(2021, 12, 12),  # 相恋日期
-    # ========== 新增周年纪念日公历日期，替换成你的年月日 ==========
-    "LOVE_ANNIVERSARY_DATE": datetime.date(2022, 12, 12),
+    # 恋爱配置：2021.12.12在一起，每年12.12周年
+    "LOVE_START_DATE": datetime.date(2021, 12, 12),
+    "LOVE_ANNIVERSARY_DATE": datetime.date(2021, 12, 12),
     "GIRL_LUNAR_BIRTH": (2002, 3, 9),                # 女友农历生日(年,月,日)
     "MY_LUNAR_BIRTH": (2003, 3, 13),                  # 自己农历生日(年,月,日)
     
@@ -102,18 +101,23 @@ def check_config():
         return False
     return True
 
-# ====================== 新增：周年倒计时计算函数 ======================
-def get_anniversary_left_days(anniv_date):
+# ====================== 周年计算函数 ======================
+def get_anniversary_info(start_date, anniv_date):
     today = datetime.datetime.now(TZ).date()
-    # 今年的周年日期
+    # 计算相恋总天数
+    total_love_days = (today - start_date).days
+    # 计算当前是第几周年
+    year_count = today.year - start_date.year
+    if (today.month, today.day) < (anniv_date.month, anniv_date.day):
+        year_count -= 1
+    # 计算下一个周年
     this_year_anniv = anniv_date.replace(year=today.year)
     if this_year_anniv < today:
-        # 今年已过，计算明年周年
         next_anniv = anniv_date.replace(year=today.year + 1)
     else:
         next_anniv = this_year_anniv
-    diff_days = (next_anniv - today).days
-    return diff_days, this_year_anniv
+    left_days = (next_anniv - today).days
+    return total_love_days, year_count, left_days, this_year_anniv
 # ======================================================================
 
 # ====================== 【核心功能函数】======================
@@ -157,10 +161,8 @@ def get_birthday_left_days(lunar_birth):
     lunar_year, lunar_month, lunar_day = lunar_birth
     
     try:
-        # 计算今年公历生日
         solar_birth = lunardate.LunarDate(today.year, lunar_month, lunar_day).toSolarDate()
         if solar_birth < today:
-            # 今年已过，算明年
             solar_birth = lunardate.LunarDate(today.year + 1, lunar_month, lunar_day).toSolarDate()
         return (solar_birth - today).days
     except Exception as e:
@@ -169,29 +171,26 @@ def get_birthday_left_days(lunar_birth):
 def generate_love_message():
     """生成消息（带Emoji，规避风控）"""
     try:
-        # 基础数据计算
         today = datetime.datetime.now(TZ).date()
-        love_days = (today - CONFIG["LOVE_START_DATE"]).days
-        # 周年数据计算
-        anniv_left, this_year_anniv = get_anniversary_left_days(CONFIG["LOVE_ANNIVERSARY_DATE"])
-        # 判断是否今日周年
-        if today == this_year_anniv:
-            anniv_tip = f"🎉 今天是我们的周年纪念日！岁岁年年，满心是你"
+        # 获取相恋天数、第几年、距离周年天数、今年周年日期
+        total_days, curr_year, anniv_left, curr_anniv_day = get_anniversary_info(CONFIG["LOVE_START_DATE"], CONFIG["LOVE_ANNIVERSARY_DATE"])
+
+        # 周年提示文案区分当天/普通日子
+        if today == curr_anniv_day:
+            anniv_notice = f"🎉 今天是我们{curr_year}周年纪念日！岁岁年年，满心是你"
         else:
-            anniv_tip = f"💌 距离恋爱周年纪念日还有 {anniv_left} 天"
+            anniv_notice = f"💌 距离周年纪念日还有 {anniv_left} 天"
 
         girl_birth_left = get_birthday_left_days(CONFIG["GIRL_LUNAR_BIRTH"])
         my_birth_left = get_birthday_left_days(CONFIG["MY_LUNAR_BIRTH"])
         weather = get_weather()
         
-        # 随机文案
         advice = random.choice(DAILY_ADVICE)
         joke = random.choice(LOVE_JOKES)
         girl_const_tip = random.choice(CONSTELLATION_TIPS.get(CONFIG["GIRL_CONSTELLATION"], CONSTELLATION_TIPS["其他星座"]))
         my_const_tip = random.choice(CONSTELLATION_TIPS.get(CONFIG["MY_CONSTELLATION"], CONSTELLATION_TIPS["其他星座"]))
         ending = random.choice(ENDING_WORDS)
         
-        # 生日提示（带Emoji）
         def birth_tip(name, days):
             if days == 0:
                 return f"🎂 {name}今天生日啦！生日快乐🥳"
@@ -200,15 +199,16 @@ def generate_love_message():
             else:
                 return f"🎂 距离{name}生日还有 {days} 天"
         
-        # 核心：带Emoji的消息格式（数量适中，避免风控）
+        # 固定每日展示：相恋周年+总天数
+        fixed_love_text = f"💞 我们在一起的第{curr_year}周年，相伴总天数：{total_days}天"
+
         message = (
                 "💌 给宝宝的每日甜蜜提醒:\n" 
-            
             f"🏙️ 城市：{CONFIG['CITY_NAME']}\n"
             f"{weather}\n"
             f"{advice}\n"
-            f"💑 我们相恋的第 {love_days} 天\n"
-            f"{anniv_tip}\n"
+            f"{fixed_love_text}\n"
+            f"{anniv_notice}\n"
             f"{birth_tip('宝贝', girl_birth_left)}\n"
             f"{birth_tip('我的', my_birth_left)}\n"
             f"{joke}\n"
@@ -254,24 +254,19 @@ def main():
     """程序主入口"""
     print_log("INFO", "========== 开始执行每日消息推送 ==========")
     
-    # 1. 校验配置
     if not check_config():
         return
     
-    # 2. 获取Token
     token = get_access_token()
     if not token:
         print_log("ERROR", "获取Token失败，任务终止")
         return
     
-    # 3. 生成消息
     message = generate_love_message()
     
-    # 4. 发送消息
     send_girl = send_wechat_msg(CONFIG["GIRL_OPENID"], token, message)
     send_my = send_wechat_msg(CONFIG["MY_OPENID"], token, message)
     
-    # 5. 结果汇总
     if send_girl and send_my:
         print_log("SUCCESS", "全部消息发送成功 ✅")
     else:
