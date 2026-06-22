@@ -3,6 +3,7 @@
 情侣每日消息推送【Emoji优化版】
 解决：微信消息拦截、缩进错误、格式异常问题
 新增：适配风控的精美Emoji表情，视觉更温馨
+新增：周年纪念日倒计时功能
 """
 import requests
 import datetime
@@ -12,11 +13,9 @@ import time
 import lunardate
 import os
 import pytz
-
 # ====================== 【基础配置】======================
 # 时区配置（固定为北京时间）
 TZ = pytz.timezone('Asia/Shanghai')
-
 # 核心配置（优先从GitHub Secrets读取，本地测试可直接填写）
 CONFIG = {
     # 微信公众号必填配置
@@ -32,6 +31,8 @@ CONFIG = {
     
     # 恋爱/生日配置（直接修改为自己的信息）
     "LOVE_START_DATE": datetime.date(2021, 12, 12),  # 相恋日期
+    # ========== 新增周年纪念日公历日期，替换成你的年月日 ==========
+    "LOVE_ANNIVERSARY_DATE": datetime.date(2022, 12, 12),
     "GIRL_LUNAR_BIRTH": (2002, 3, 9),                # 女友农历生日(年,月,日)
     "MY_LUNAR_BIRTH": (2003, 3, 13),                  # 自己农历生日(年,月,日)
     
@@ -39,7 +40,6 @@ CONFIG = {
     "GIRL_CONSTELLATION": "金牛座",  # 女友星座
     "MY_CONSTELLATION": "白羊座",    # 自己星座
 }
-
 # ====================== 【自定义文案库】带Emoji ======================
 DAILY_ADVICE = [
     "🥢 宝贝，记得按时吃饭，不许挑食哦",
@@ -50,7 +50,6 @@ DAILY_ADVICE = [
     "🧥 乖乖，天气变化记得添减衣服",
     "🥳 亲爱的，今天也要开开心心的，不许不开心"
 ]
-
 LOVE_JOKES = [
     "💘 什么门永远关不上？是我想你的心门呀",
     "🥰 什么瓜最甜？你这个小傻瓜最甜啦",
@@ -59,7 +58,6 @@ LOVE_JOKES = [
     "🍬 什么糖最甜？你甜甜的笑最甜",
     "🛤️ 什么路最长？想陪你走的余生最长"
 ]
-
 CONSTELLATION_TIPS = {
     "金牛座": [
         "🍰 今天适合吃点好吃的，好好犒劳自己",
@@ -81,7 +79,6 @@ CONSTELLATION_TIPS = {
         "💖 爱自己是终身浪漫的开始"
     ]
 }
-
 ENDING_WORDS = [
     "💓 我爱你，今天也超爱你",
     "💭 想你，时时刻刻都在想你",
@@ -90,14 +87,12 @@ ENDING_WORDS = [
     "💌 余生漫漫，我只喜欢你",
     "❤️ 你是我的满心欢喜与唯一"
 ]
-
 # ====================== 【工具函数】======================
 def print_log(level, content):
     """格式化日志输出"""
     now = datetime.datetime.now(TZ).strftime("%Y-%m-%d %H:%M:%S")
     level_map = {"INFO": "[INFO]", "WARN": "[WARN]", "ERROR": "[ERROR]", "SUCCESS": "[SUCCESS]"}
     print(f"{now} {level_map.get(level, '[INFO]')} {content}")
-
 def check_config():
     """校验必填配置"""
     must_config = ["WECHAT_APPID", "WECHAT_APPSECRET", "GIRL_OPENID", "MY_OPENID", "AMAP_KEY", "CITY_ADCODE"]
@@ -106,6 +101,20 @@ def check_config():
         print_log("ERROR", f"必填配置缺失：{','.join(miss)}")
         return False
     return True
+
+# ====================== 新增：周年倒计时计算函数 ======================
+def get_anniversary_left_days(anniv_date):
+    today = datetime.datetime.now(TZ).date()
+    # 今年的周年日期
+    this_year_anniv = anniv_date.replace(year=today.year)
+    if this_year_anniv < today:
+        # 今年已过，计算明年周年
+        next_anniv = anniv_date.replace(year=today.year + 1)
+    else:
+        next_anniv = this_year_anniv
+    diff_days = (next_anniv - today).days
+    return diff_days, this_year_anniv
+# ======================================================================
 
 # ====================== 【核心功能函数】======================
 def get_access_token(retry=3):
@@ -126,7 +135,6 @@ def get_access_token(retry=3):
             print_log("WARN", f"获取Token异常({i+1}/{retry})：{str(e)}")
             time.sleep(1)
     return None
-
 def get_weather():
     """获取高德天气（简化版）"""
     try:
@@ -143,7 +151,6 @@ def get_weather():
     except Exception as e:
         print_log("ERROR", f"获取天气失败：{str(e)}")
         return "🌤️ 天气获取失败"
-
 def get_birthday_left_days(lunar_birth):
     """计算生日倒计时（农历转公历）"""
     today = datetime.datetime.now(TZ).date()
@@ -159,12 +166,20 @@ def get_birthday_left_days(lunar_birth):
     except Exception as e:
         print_log("ERROR", f"计算生日失败：{str(e)}")
         return 0
-
 def generate_love_message():
     """生成消息（带Emoji，规避风控）"""
     try:
         # 基础数据计算
-        love_days = (datetime.datetime.now(TZ).date() - CONFIG["LOVE_START_DATE"]).days
+        today = datetime.datetime.now(TZ).date()
+        love_days = (today - CONFIG["LOVE_START_DATE"]).days
+        # 周年数据计算
+        anniv_left, this_year_anniv = get_anniversary_left_days(CONFIG["LOVE_ANNIVERSARY_DATE"])
+        # 判断是否今日周年
+        if today == this_year_anniv:
+            anniv_tip = f"🎉 今天是我们的周年纪念日！岁岁年年，满心是你"
+        else:
+            anniv_tip = f"💌 距离恋爱周年纪念日还有 {anniv_left} 天"
+
         girl_birth_left = get_birthday_left_days(CONFIG["GIRL_LUNAR_BIRTH"])
         my_birth_left = get_birthday_left_days(CONFIG["MY_LUNAR_BIRTH"])
         weather = get_weather()
@@ -193,6 +208,7 @@ def generate_love_message():
             f"{weather}\n"
             f"{advice}\n"
             f"💑 我们相恋的第 {love_days} 天\n"
+            f"{anniv_tip}\n"
             f"{birth_tip('宝贝', girl_birth_left)}\n"
             f"{birth_tip('我的', my_birth_left)}\n"
             f"{joke}\n"
@@ -205,7 +221,6 @@ def generate_love_message():
     except Exception as e:
         print_log("ERROR", f"生成消息失败：{str(e)}")
         return "❤️ 今日甜蜜消息生成失败，宝贝我超想你 ❤️"
-
 def send_wechat_msg(openid, token, message):
     """发送微信消息（适配Emoji+风控）"""
     if not token or not openid:
@@ -234,7 +249,6 @@ def send_wechat_msg(openid, token, message):
     except Exception as e:
         print_log("ERROR", f"发送异常：{str(e)}")
         return False
-
 # ====================== 【主执行函数】======================
 def main():
     """程序主入口"""
@@ -264,6 +278,5 @@ def main():
         print_log("ERROR", "部分/全部消息发送失败 ❌")
     
     print_log("INFO", "========== 消息推送任务结束 ==========")
-
 if __name__ == "__main__":
     main()
